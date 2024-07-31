@@ -1,0 +1,243 @@
+﻿@page "/"
+@using GestorDeMetas.Shared
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Home</PageTitle>
+
+<div class="container mt-4">
+
+    <div class="row">
+        <div class="col-12">
+            <div class="p-3 mb-2 bg-primary text-white text-center">
+                <h2>Control de Metas</h2>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+
+        <div class="col-md-3">
+
+            <div class="mb-3">
+                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#addMetaModal">
+                    <i class="fas fa-plus"></i> Agregar Meta
+                </button>
+            </div>
+            <style>
+                .buttonshadow {
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+
+                    .buttonshadow:hover {
+                        background-color: #d8e0eb;
+                    }
+
+                .buttonshadowInside {
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+
+                    .buttonshadowInside:hover {
+                        background-color: #16537e;
+                    }
+
+            </style>
+            <!-- Listado de metas -->
+            <div class="border p-3">
+                @foreach (var metas in Listado)
+                {
+                    <div class="border p-3 buttonshadow" onclick="ShowTareas('@metas.IdMeta','@metas.Nombre')">
+                        <div class="d-flex justify-content-between buttonshadow">
+                            <span>@metas.Nombre</span>
+                            <div>
+                                <button class="text-primary mr-2 buttonshadowInside" style="border: none;" onClick="event.stopPropagation();Modificar_Meta('@metas.IdMeta', '@metas.Nombre');">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="text-danger mr-2 buttonshadowInside" style="border: none;" onClick="event.stopPropagation();Eliminar_Meta('@metas.IdMeta', '@metas.Nombre')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted">Fecha de creación: @metas.Fecha</small>
+                        <div class="progress mt-2">
+                            <div class="progress-bar" role="progressbar" style="width: @metas.Porcentaje%;" aria-valuenow="@metas.Porcentaje" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+
+                        </div>
+                        <small class="text-muted">Tarea completada: @metas.Porcentaje%</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Barra de Compensación -->
+        <div class="col-md-9">
+            <h3>Configurar Barra de Compensación</h3>
+            <button class="btn btn-primary mb-3" id="addTareabutton" data-toggle="modal" data-target="#addTareaModal" disabled>
+                <i class="fas fa-plus"></i> Agregar Tarea
+            </button>
+
+            <!-- Datagrid de tareas -->
+            <div class="panel-body table-responsive" id="listadoTareas">
+                <table id="tabTareas" class="table table-striped table-bordered table-condensed table-hover">
+                    <thead>
+                    <th></th>
+                    <th>Nombre de la Tarea</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    <tfoot>
+                    <th></th>
+                    <th>Nombre de la Tarea</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Meta -->
+    <div class="modal fade" id="addMetaModal" tabindex="-1" role="dialog" aria-labelledby="addMetaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMetaModalLabel">Agregar Nueva Meta</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMetaForm">
+                        <div class="form-group">
+                            <label for="metaName">Nombre:</label>
+                            <input type="text" class="form-control" id="metaName" maxlength="80" placeholder="Ingrese el nombre de la meta" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button onClick="event.preventDefault();Add_Meta();" class="btn btn-primary">Aceptar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Modificar Meta -->
+    <div class="modal fade" id="ChangeMetaModal" tabindex="-1" role="dialog" aria-labelledby="ChangeMetaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ChangeMetaModalLabel">Modificar Meta</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="changeMetaForm">
+                        <div class="form-group">
+                            <input type="hidden" id="hiddenId" name="hiddenId" value="" />
+                            <label for="metaName">Nombre:</label>
+                            <input type="text" class="form-control" id="newName" maxlength="80" placeholder="Ingrese el nombre de la meta" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button onClick="event.preventDefault();ChangeMetaModal()" class="btn btn-primary">Aceptar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Tarea -->
+    <div class="modal fade" id="addTareaModal" tabindex="-1" role="dialog" aria-labelledby="addTareaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTareaModalLabel">Agregar Nueva Tarea </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTareaForm">
+                        <h5 class="modal-title" id="lagelMetaNameTareaModal"></h5>
+                        <input type="hidden" id="hiddenIdMeta" name="hiddenIdMeta" value="" />
+                        <div class="form-group">
+                            <label for="tareaName" id="tareaLabelName">Nombre:</label>
+                            <input type="text" class="form-control" id="tareaName" maxlength="80" placeholder="Ingrese el nombre de la tarea" required>
+                            <hr />
+                            <label for="tareaName" id="descripcion">Descripción:</label>
+                            <input type="text" class="form-control" id="tareaDesc" maxlength="80" placeholder="Ingrese una descripción" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button onClick="event.preventDefault();Add_Tarea()" class="btn btn-primary">Aceptar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal para Modificar Tarea -->
+    <div class="modal fade" id="ChangeTareaModal" tabindex="-1" role="dialog" aria-labelledby="ChangeTareaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ChangeTareaModalLabel">Modificar Tarea</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="changeTareaForm">
+                        <div class="form-group">
+                            <input type="hidden" id="hiddenIdTarea" name="hiddenIdTarea" value="" />
+                            <label for="TaName">Nombre:</label>
+                            <input type="text" class="form-control" id="newTareaName" maxlength="80" placeholder="Ingrese el nombre de la tarea" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button onClick="event.preventDefault();ModificaNombreTarea()" class="btn btn-primary">Aceptar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    //string conexionServidor = "En espera..";
+    //string conexionMeta = "En espera..";
+    //string conexionTarea = "En espera..";
+    public static List<Meta> Listado = new List<Meta>();
+    //public static List<Movimiento> Movimientos = new List<Movimiento>();
+    Meta miMeta = new Meta();
+
+    async Task Actualizar()
+    {
+        
+        var metas = await Http.GetFromJsonAsync<List<Meta>>("https://localhost:44356/api/Meta/ObtenerMetas");
+        Listado = metas;
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Actualizar();
+    }
+
+}

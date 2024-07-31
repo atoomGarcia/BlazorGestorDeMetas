@@ -1,0 +1,43 @@
+﻿@page "/counter"
+
+<PageTitle>Counter</PageTitle>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        <!--@foreach (var i in Listado)---->
+        <!--{
+               <tr>
+                <td>@i.Nombre </td>
+                <td>@i.Correo </td>
+            </tr>
+        }-->
+
+
+    </tbody>
+</table>
+<br />
+<label>Nombre</label>
+<!--<input type="text" @bind-value=usuario.Nombre />
+<label>Correo</label>
+<input type="text" @bind-value=usuario.Correo />
+<br />
+<br />
+<button class="btn btn-primary" @onclick=CrearUsuario>Crear Usuario</button>
+<br />
+<label>@Respuesta</label>-->
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}
